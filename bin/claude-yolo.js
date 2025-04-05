@@ -94,7 +94,29 @@ async function checkForUpdates() {
     const dependencies = packageJson.dependencies || {};
     const currentVersion = dependencies['@anthropic-ai/claude-code'];
     
-    debug(`Current dependency in package.json: ${currentVersion}`);
+    debug(`Claude version from package.json: ${currentVersion}`);
+    
+    // Get the global Claude version if available
+    let globalVersion;
+    if (globalClaudeDir) {
+      try {
+        const globalPackageJsonPath = path.join(globalClaudeDir, 'package.json');
+        if (fs.existsSync(globalPackageJsonPath)) {
+          const globalPackageJson = JSON.parse(fs.readFileSync(globalPackageJsonPath, 'utf8'));
+          globalVersion = globalPackageJson.version;
+          debug(`Global Claude version: ${globalVersion}`);
+          
+          // If global version is latest, inform user
+          if (globalVersion === latestVersion) {
+            debug(`Global Claude installation is already the latest version`);
+          } else if (globalVersion && latestVersion) {
+            debug(`Global Claude installation (${globalVersion}) differs from latest (${latestVersion})`);
+          }
+        }
+      } catch (err) {
+        debug(`Error getting global Claude version: ${err.message}`);
+      }
+    }
     
     // If using a specific version (not "latest"), and it's out of date, update
     if (currentVersion !== "latest" && currentVersion !== latestVersion) {
@@ -119,18 +141,47 @@ async function checkForUpdates() {
   }
 }
 
-// Path to the Claude CLI file
-const claudeDir = path.join(nodeModulesDir, 'node_modules', '@anthropic-ai', 'claude-code');
-let originalCliPath = path.join(claudeDir, 'cli.mjs');
-if(!fs.existsSync(originalCliPath)) {
-  originalCliPath = path.join(claudeDir, 'cli.js');
-  if(!fs.existsSync(originalCliPath)) {
-    console.error(`Error: ${originalCliPath} not found. Make sure @anthropic-ai/claude-code is installed.`);
-    process.exit(1);
+// Try to find global installation of Claude CLI first
+let globalClaudeDir;
+try {
+  const globalNodeModules = execSync('npm -g root').toString().trim();
+  debug(`Global node_modules: ${globalNodeModules}`);
+  const potentialGlobalDir = path.join(globalNodeModules, '@anthropic-ai', 'claude-code');
+  
+  if (fs.existsSync(potentialGlobalDir)) {
+    globalClaudeDir = potentialGlobalDir;
+    debug(`Found global Claude installation at: ${globalClaudeDir}`);
   }
+} catch (error) {
+  debug(`Error finding global Claude installation: ${error.message}`);
 }
 
-const yoloCliPath = path.join(claudeDir, 'cli-yolo.mjs');
+// Path to the local Claude CLI installation
+const localClaudeDir = path.join(nodeModulesDir, 'node_modules', '@anthropic-ai', 'claude-code');
+
+// Prioritize global installation, fall back to local
+const claudeDir = globalClaudeDir || localClaudeDir;
+debug(`Using Claude installation from: ${claudeDir}`);
+debug(`Using ${claudeDir === globalClaudeDir ? 'GLOBAL' : 'LOCAL'} Claude installation`);
+
+// Check for both .js and .mjs versions of the CLI
+let mjs = path.join(claudeDir, 'cli.mjs');
+let js = path.join(claudeDir, 'cli.js');
+let originalCliPath;
+let yoloCliPath;
+
+if (fs.existsSync(js)) {
+  originalCliPath = js;
+  yoloCliPath = path.join(claudeDir, 'cli-yolo.js');
+  debug(`Found Claude CLI at ${originalCliPath} (js version)`);
+} else if (fs.existsSync(mjs)) {
+  originalCliPath = mjs;
+  yoloCliPath = path.join(claudeDir, 'cli-yolo.mjs');
+  debug(`Found Claude CLI at ${originalCliPath} (mjs version)`);
+} else {
+  console.error(`Error: Claude CLI not found in ${claudeDir}. Make sure @anthropic-ai/claude-code is installed.`);
+  process.exit(1);
+}
 const consentFlagPath = path.join(claudeDir, '.claude-yolo-consent');
 
 // Main function to run the application
@@ -167,9 +218,10 @@ async function run() {
   // Read the original CLI file content
   let cliContent = fs.readFileSync(originalCliPath, 'utf8');
 
-  // Replace all instances of "punycode" with "punycode/"
-  cliContent = cliContent.replace(/"punycode"/g, '"punycode/"');
-  debug('Replaced all instances of "punycode" with "punycode/"');
+  if (claudeDir === localClaudeDir) {
+    cliContent = cliContent.replace(/"punycode"/g, '"punycode/"');
+    debug('Replaced all instances of "punycode" with "punycode/"');
+  }
 
   // Replace getIsDocker() calls with true
   cliContent = cliContent.replace(/[a-zA-Z0-9_]*\.getIsDocker\(\)/g, 'true');
