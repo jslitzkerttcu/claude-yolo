@@ -162,6 +162,7 @@ const localClaudeDir = path.join(nodeModulesDir, 'node_modules', '@anthropic-ai'
 // Prioritize global installation, fall back to local
 const claudeDir = globalClaudeDir || localClaudeDir;
 debug(`Using Claude installation from: ${claudeDir}`);
+debug(`Using ${claudeDir === globalClaudeDir ? 'GLOBAL' : 'LOCAL'} Claude installation`);
 
 // Check for both .js and .mjs versions of the CLI
 let mjs = path.join(claudeDir, 'cli.mjs');
@@ -217,8 +218,10 @@ async function run() {
   // Read the original CLI file content
   let cliContent = fs.readFileSync(originalCliPath, 'utf8');
 
-  // NOTE: Removed punycode replacement that was causing module resolution errors
-  // debug('Skipping punycode replacement to avoid module resolution errors');
+  if (claudeDir === localClaudeDir) {
+    cliContent = cliContent.replace(/"punycode"/g, '"punycode/"');
+    debug('Replaced all instances of "punycode" with "punycode/"');
+  }
 
   // Replace getIsDocker() calls with true
   cliContent = cliContent.replace(/[a-zA-Z0-9_]*\.getIsDocker\(\)/g, 'true');
