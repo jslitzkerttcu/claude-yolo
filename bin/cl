@@ -1,0 +1,117 @@
+#!/bin/bash
+
+# Claude YOLO/SAFE Mode Wrapper Script
+# Usage: cl /YON | /YOFF | /STATUS | /HELP | [claude commands]
+
+# Barvy pro výstup
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+RESET='\033[0m'
+BOLD='\033[1m'
+
+# Soubor pro uložení stavu
+STATE_FILE="$HOME/.claude_yolo_state"
+
+# Funkce pro čtení aktuálního režimu
+get_mode() {
+    if [ -f "$STATE_FILE" ]; then
+        cat "$STATE_FILE"
+    else
+        echo "SAFE"  # Výchozí je bezpečný režim
+    fi
+}
+
+# Funkce pro nastavení režimu
+set_mode() {
+    echo "$1" > "$STATE_FILE"
+}
+
+# Zpracování argumentů
+case "$1" in
+    /YON)
+        echo -e "${YELLOW}${BOLD}🔥 ACTIVATING YOLO MODE 🔥${RESET}"
+        echo -e "${RED}⚠️  WARNING: All safety checks will be DISABLED!${RESET}"
+        echo -e "${RED}⚠️  Claude can access ANY file without asking!${RESET}"
+        set_mode "YOLO"
+        echo -e "${YELLOW}✓ YOLO mode is now ON${RESET}"
+        ;;
+        
+    /YOFF)
+        echo -e "${CYAN}${BOLD}🛡️  ACTIVATING SAFE MODE 🛡️${RESET}"
+        echo -e "${GREEN}✓ Safety checks will be enabled${RESET}"
+        echo -e "${GREEN}✓ Claude will ask for permissions${RESET}"
+        set_mode "SAFE"
+        echo -e "${CYAN}✓ YOLO mode is now OFF (Safe mode ON)${RESET}"
+        ;;
+        
+    /STATUS)
+        MODE=$(get_mode)
+        echo -e "${BOLD}Claude CLI Status:${RESET}"
+        echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        if [ "$MODE" = "YOLO" ]; then
+            echo -e "Mode: ${YELLOW}${BOLD}YOLO${RESET} 🔥"
+            echo -e "Safety: ${RED}DISABLED${RESET}"
+            echo -e "Permissions: ${RED}BYPASSED${RESET}"
+        else
+            echo -e "Mode: ${CYAN}${BOLD}SAFE${RESET} 🛡️"
+            echo -e "Safety: ${GREEN}ENABLED${RESET}"
+            echo -e "Permissions: ${GREEN}REQUIRED${RESET}"
+        fi
+        echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        ;;
+        
+    /HELP|/H|/?)
+        echo -e "${BOLD}Claude CLI Wrapper - Help${RESET}"
+        echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e "${CYAN}cl /YON${RESET}     - Enable YOLO mode (bypass safety)"
+        echo -e "${CYAN}cl /YOFF${RESET}    - Disable YOLO mode (safe mode)"
+        echo -e "${CYAN}cl /STATUS${RESET}  - Show current mode"
+        echo -e "${CYAN}cl /HELP${RESET}    - Show this help"
+        echo -e "${CYAN}cl [args]${RESET}   - Run claude with current mode"
+        echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo -e ""
+        echo -e "${BOLD}Examples:${RESET}"
+        echo -e "  cl /YON                    # Enable YOLO mode"
+        echo -e "  cl /YOFF                   # Enable SAFE mode"
+        echo -e "  cl \"write a function\"      # Run Claude in current mode"
+        echo -e ""
+        echo -e "${BOLD}Mode Persistence:${RESET}"
+        echo -e "Your mode choice is saved in ~/.claude_yolo_state"
+        echo -e "and persists between terminal sessions."
+        ;;
+        
+    *)
+        # Spustit Claude v aktuálním režimu
+        MODE=$(get_mode)
+        
+        # Zobrazit režim před spuštěním
+        if [ "$MODE" = "YOLO" ]; then
+            echo -e "${YELLOW}[YOLO]${RESET} Running Claude in YOLO mode..."
+            # Check if claude-yolo is installed
+            if command -v claude-yolo &> /dev/null; then
+                claude-yolo "$@"
+            else
+                echo -e "${RED}Error: claude-yolo is not installed${RESET}"
+                echo -e "Install it with: ${CYAN}npm install -g claude-yolo${RESET}"
+                exit 1
+            fi
+        else
+            echo -e "${CYAN}[SAFE]${RESET} Running Claude in SAFE mode..."
+            # Check if claude is installed
+            if command -v claude &> /dev/null; then
+                claude "$@"
+            else
+                # If regular claude is not installed, use claude-yolo with --safe flag
+                if command -v claude-yolo &> /dev/null; then
+                    claude-yolo --safe "$@"
+                else
+                    echo -e "${RED}Error: Neither claude nor claude-yolo is installed${RESET}"
+                    echo -e "Install claude-yolo with: ${CYAN}npm install -g claude-yolo${RESET}"
+                    exit 1
+                fi
+            fi
+        fi
+        ;;
+esac
