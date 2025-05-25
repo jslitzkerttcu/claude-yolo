@@ -6,10 +6,12 @@ A wrapper for the Claude CLI that can run in YOLO mode (bypassing all safety che
 
 ## What's New in This Fork 🎉
 
-This fork adds **SAFE MODE** support! You can now:
+This fork adds **SAFE MODE** support and more! You can now:
 - Switch between YOLO and SAFE modes
 - Use the handy `cl` bash wrapper for quick mode switching
 - Mode preference is saved between sessions
+- **NEW**: Auto-start Claude after mode switch
+- **NEW**: YOLO mode works even as root user
 
 ## Installation
 
@@ -53,23 +55,29 @@ claude-yolo mode safe
 claude-yolo mode
 ```
 
-### Using the cl wrapper script
+### Using the cl wrapper script (Recommended!)
 
 For even easier mode management, use the included `cl` bash wrapper:
 
 ```bash
-# Copy the cl script to your PATH
+# Install globally during npm install
+npm install -g github:maxparez/claude-yolo
+
+# Or copy manually to your PATH
 cp node_modules/claude-yolo/bin/cl /usr/local/bin/cl
 chmod +x /usr/local/bin/cl
 
 # Now you can use:
-cl /YON      # Enable YOLO mode
-cl /YOFF     # Enable SAFE mode  
-cl /STATUS   # Show current mode
+cl /YON      # Switch to YOLO mode AND start Claude
+cl /YOFF     # Switch to SAFE mode AND start Claude
+cl /STATUS   # Show current mode (without starting Claude)
 cl /HELP     # Show help
 
 # Run Claude in current mode
 cl "write a hello world function"
+
+# Switch mode and run with command
+cl /YON "create a web server"
 ```
 
 Mode preference is saved in `~/.claude_yolo_state` and persists between sessions.
@@ -80,6 +88,15 @@ The tool now shows clear visual indicators of which mode you're in:
 
 - **YOLO Mode**: `[YOLO]` prefix in yellow 🔥
 - **SAFE Mode**: `[SAFE]` prefix in cyan 🛡️
+
+## Root User Support
+
+Unlike the standard Claude CLI, this fork allows YOLO mode to run even as root user:
+
+- Standard Claude CLI blocks `--dangerously-skip-permissions` when running as root
+- This fork bypasses that check in YOLO mode
+- You'll see a warning when running as root, but it will work
+- SAFE mode respects all original Claude CLI security features
 
 ## Usage
 
@@ -95,12 +112,20 @@ This wrapper in YOLO mode:
 3. Creates a modified copy of the Claude CLI code to bypass permission checks
    - Replaces all `getIsDocker()` calls with `true`
    - Replaces all `hasInternetAccess()` calls with `false`
+   - Bypasses root user checks (process.getuid() === 0)
    - Adds colorful YOLO-themed loading messages
 4. Leaves the original Claude CLI file untouched (won't affect your normal `claude` command)
 5. Adds the `--dangerously-skip-permissions` flag to command line arguments
 6. Imports the modified copy of the CLI
 
 In SAFE mode, it simply runs the original Claude CLI without modifications.
+
+## New in Version 1.8.0 (This Fork)
+
+- **Auto-start on Mode Switch**: `cl /YON` and `cl /YOFF` now automatically start Claude after switching
+- **Root User Bypass**: YOLO mode now works even when running as root/sudo
+- **Improved cl Wrapper**: More intuitive behavior with auto-start feature
+- **Better Error Handling**: Clearer messages when running as root
 
 ## New in Version 1.7.0 (This Fork)
 
@@ -109,27 +134,6 @@ In SAFE mode, it simply runs the original Claude CLI without modifications.
 - **Mode Commands**: Use `claude-yolo mode [yolo|safe]` to switch modes
 - **Bash Wrapper**: Included `cl` script for easy mode switching
 - **Visual Mode Indicators**: Clear `[YOLO]` or `[SAFE]` prefixes
-
-## New in Version 1.6.1
-
-- **Runtime Consent Check**: Now requires explicit user consent on first run
-- **Consent Persistence**: Remembers user consent for future runs
-- **Fixed Global Installation**: Consent prompt will properly show for both local and global installations
-
-## New in Version 1.6.0
-
-- **Installation Consent Prompt**: Added explicit user consent during installation
-- **Enhanced Security Warnings**: Clear explanations of the security implications
-- **Installation Abort Option**: Users can cancel installation if they don't agree with the security implications
-
-## New in Version 1.5.0
-
-- **YOLO Mode Warning**: Displays a "🔥 YOLO MODE ACTIVATED 🔥" warning in yellow text
-- **Colorful Loading Messages**: Adds fun YOLO-themed loading messages with colorful text
-  - "Thinking (safety's off, hold on tight)" in red
-  - "Computing (all gas, no brakes, lfg)" in yellow
-  - "Clauding (yolo mode engaged)" in magenta
-  - "Processing (dangerous mode! I guess you can just do things)" in cyan
 
 ## Features
 
@@ -155,6 +159,7 @@ This will show additional information about:
 - Current and latest available versions
 - When updates are being installed
 - Modifications being made to the CLI file
+- Root bypass operations
 
 ## Auto-Update Feature
 
@@ -174,9 +179,11 @@ This is an unofficial tool and not supported by Anthropic. Use at your own risk.
 **SECURITY WARNING**:
 - YOLO mode bypasses safety mechanisms intentionally built into the Claude CLI
 - The `--dangerously-skip-permissions` flag was designed for use in container environments
+- This fork additionally bypasses root user restrictions in YOLO mode
 - By using this tool in YOLO mode, you acknowledge that:
   - Important safety checks are being bypassed
   - Claude may access files it normally would not have permission to access
+  - Running as root with bypassed permissions is extremely dangerous
   - You accept full responsibility for any security implications
   
 Anthropic designed these safety checks for good reason. Only use YOLO mode if you fully understand and accept these risks. Use SAFE mode when you want the standard Claude CLI protections.
