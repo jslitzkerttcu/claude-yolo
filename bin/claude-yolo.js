@@ -258,6 +258,19 @@ async function run() {
   // YOLO MODE continues below
   console.log(`${YELLOW}[YOLO] Running Claude in YOLO mode${RESET}`);
   
+  // Temporarily fake non-root for YOLO mode
+  if (process.getuid && process.getuid() === 0) {
+    console.log(`${YELLOW}⚠️  Running as root - applying YOLO bypass...${RESET}`);
+    // Store original getuid
+    const originalGetuid = process.getuid;
+    // Override getuid to return non-root
+    process.getuid = () => 1000; // Fake regular user ID
+    // Restore after a delay to allow CLI to start
+    setTimeout(() => {
+      process.getuid = originalGetuid;
+    }, 100);
+  }
+  
   // Check and update Claude package first
   await checkForUpdates();
 
@@ -302,6 +315,24 @@ async function run() {
   // Replace hasInternetAccess() calls with false
   cliContent = cliContent.replace(/[a-zA-Z0-9_]*\.hasInternetAccess\(\)/g, 'false');
   debug("Replaced all instances of *.hasInternetAccess() with false");
+
+  // Replace root check patterns
+  // Pattern 1: process.getuid() === 0
+  cliContent = cliContent.replace(/process\.getuid\(\)\s*===\s*0/g, 'false');
+  debug("Replaced process.getuid() === 0 checks with false");
+
+  // Pattern 2: process.getuid?.() === 0
+  cliContent = cliContent.replace(/process\.getuid\?\.\(\)\s*===\s*0/g, 'false');
+  debug("Replaced process.getuid?.() === 0 checks with false");
+
+  // Pattern 3: getuid() === 0 (with any variable)
+  cliContent = cliContent.replace(/(\w+)\.getuid\(\)\s*===\s*0/g, 'false');
+  debug("Replaced all getuid() === 0 checks with false");
+
+  // Pattern 4: Replace any EUID checks
+  cliContent = cliContent.replace(/process\.geteuid\(\)\s*===\s*0/g, 'false');
+  cliContent = cliContent.replace(/process\.geteuid\?\.\(\)\s*===\s*0/g, 'false');
+  debug("Replaced geteuid() checks with false");
 
   // Add warning message
   console.log(`${YELLOW}🔥 YOLO MODE ACTIVATED 🔥${RESET}`);
