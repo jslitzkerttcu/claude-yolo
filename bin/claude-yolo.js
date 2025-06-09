@@ -3,6 +3,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
@@ -12,8 +13,26 @@ import readline from 'readline';
 const RED = '\x1b[31m';
 const YELLOW = '\x1b[33m';
 const CYAN = '\x1b[36m';
+const GREEN = '\x1b[32m';
 const RESET = '\x1b[0m';
 const BOLD = '\x1b[1m';
+
+// Path to persistent state file
+const stateFile = path.join(os.homedir(), '.claude_yolo_state');
+
+// Function to get current mode from state file
+function getMode() {
+  try {
+    return fs.readFileSync(stateFile, 'utf8').trim();
+  } catch {
+    return 'YOLO'; // Default mode
+  }
+}
+
+// Function to set mode in state file
+function setMode(mode) {
+  fs.writeFileSync(stateFile, mode);
+}
 
 // Debug logging function that only logs if DEBUG env var is set
 const debug = (message) => {
@@ -30,20 +49,21 @@ function askForConsent() {
       output: process.stdout
     });
 
-    console.log(`\n${BOLD}${YELLOW}🔥 CLAUDE-YOLO INSTALLATION CONSENT REQUIRED 🔥${RESET}\n`);
+    console.log(`\n${BOLD}${YELLOW}🔥 CLAUDE-YOLO CONSENT REQUIRED 🔥${RESET}\n`);
     console.log(`${CYAN}----------------------------------------${RESET}`);
     console.log(`${BOLD}What is claude-yolo?${RESET}`);
     console.log(`This package creates a wrapper around the official Claude CLI tool that:`);
     console.log(`  1. ${RED}BYPASSES safety checks${RESET} by automatically adding the --dangerously-skip-permissions flag`);
     console.log(`  2. Automatically updates to the latest Claude CLI version`);
-    console.log(`  3. Adds colorful YOLO-themed loading messages\n`);
+    console.log(`  3. Adds colorful YOLO-themed loading messages`);
+    console.log(`  4. ${GREEN}NOW SUPPORTS SAFE MODE${RESET} with --safe flag\n`);
 
     console.log(`${BOLD}${RED}⚠️ IMPORTANT SECURITY WARNING ⚠️${RESET}`);
     console.log(`The ${BOLD}--dangerously-skip-permissions${RESET} flag was designed for use in containers`);
     console.log(`and bypasses important safety checks. This includes ignoring file access`);
     console.log(`permissions that protect your system and privacy.\n`);
 
-    console.log(`${BOLD}By using claude-yolo:${RESET}`);
+    console.log(`${BOLD}By using claude-yolo in YOLO mode:${RESET}`);
     console.log(`  • You acknowledge these safety checks are being bypassed`);
     console.log(`  • You understand this may allow Claude CLI to access sensitive files`);
     console.log(`  • You accept full responsibility for any security implications\n`);
@@ -186,6 +206,71 @@ const consentFlagPath = path.join(claudeDir, '.claude-yolo-consent');
 
 // Main function to run the application
 async function run() {
+  // Handle mode commands first
+  const args = process.argv.slice(2);
+  if (args[0] === 'mode') {
+    if (args[1] === 'yolo') {
+      console.log(`${YELLOW}🔥 Switching to YOLO mode...${RESET}`);
+      console.log(`${RED}⚠️  WARNING: All safety checks will be DISABLED!${RESET}`);
+      setMode('YOLO');
+      console.log(`${YELLOW}✓ YOLO mode activated${RESET}`);
+      return;
+    } else if (args[1] === 'safe') {
+      console.log(`${CYAN}🛡️  Switching to SAFE mode...${RESET}`);
+      console.log(`${GREEN}✓ Safety checks will be enabled${RESET}`);
+      setMode('SAFE');
+      console.log(`${CYAN}✓ SAFE mode activated${RESET}`);
+      return;
+    } else {
+      const currentMode = getMode();
+      console.log(`Current mode: ${currentMode === 'YOLO' ? YELLOW : CYAN}${currentMode}${RESET}`);
+      return;
+    }
+  }
+
+  // Check for --safe or --no-yolo flags
+  const safeMode = process.argv.includes('--safe') || 
+                   process.argv.includes('--no-yolo') ||
+                   getMode() === 'SAFE';
+  
+  if (safeMode) {
+    // Remove our flags before passing to original CLI
+    process.argv = process.argv.filter(arg => 
+      arg !== '--safe' && arg !== '--no-yolo'
+    );
+    
+    console.log(`${CYAN}[SAFE] Running Claude in SAFE mode${RESET}`);
+    
+    // Update if needed
+    await checkForUpdates();
+    
+    // Ensure original CLI exists
+    if (!fs.existsSync(originalCliPath)) {
+      console.error(`Error: ${originalCliPath} not found. Make sure @anthropic-ai/claude-code is installed.`);
+      process.exit(1);
+    }
+    
+    // Run original CLI without modifications
+    await import(originalCliPath);
+    return; // Exit early
+  }
+
+  // YOLO MODE continues below
+  console.log(`${YELLOW}[YOLO] Running Claude in YOLO mode${RESET}`);
+  
+  // Temporarily fake non-root for YOLO mode
+  if (process.getuid && process.getuid() === 0) {
+    console.log(`${YELLOW}⚠️  Running as root - applying YOLO bypass...${RESET}`);
+    // Store original getuid
+    const originalGetuid = process.getuid;
+    // Override getuid to return non-root
+    process.getuid = () => 1000; // Fake regular user ID
+    // Restore after a delay to allow CLI to start
+    setTimeout(() => {
+      process.getuid = originalGetuid;
+    }, 100);
+  }
+  
   // Check and update Claude package first
   await checkForUpdates();
 
@@ -230,6 +315,24 @@ async function run() {
   // Replace hasInternetAccess() calls with false
   cliContent = cliContent.replace(/[a-zA-Z0-9_]*\.hasInternetAccess\(\)/g, 'false');
   debug("Replaced all instances of *.hasInternetAccess() with false");
+
+  // Replace root check patterns
+  // Pattern 1: process.getuid() === 0
+  cliContent = cliContent.replace(/process\.getuid\(\)\s*===\s*0/g, 'false');
+  debug("Replaced process.getuid() === 0 checks with false");
+
+  // Pattern 2: process.getuid?.() === 0
+  cliContent = cliContent.replace(/process\.getuid\?\.\(\)\s*===\s*0/g, 'false');
+  debug("Replaced process.getuid?.() === 0 checks with false");
+
+  // Pattern 3: getuid() === 0 (with any variable)
+  cliContent = cliContent.replace(/(\w+)\.getuid\(\)\s*===\s*0/g, 'false');
+  debug("Replaced all getuid() === 0 checks with false");
+
+  // Pattern 4: Replace any EUID checks
+  cliContent = cliContent.replace(/process\.geteuid\(\)\s*===\s*0/g, 'false');
+  cliContent = cliContent.replace(/process\.geteuid\?\.\(\)\s*===\s*0/g, 'false');
+  debug("Replaced geteuid() checks with false");
 
   // Add warning message
   console.log(`${YELLOW}🔥 YOLO MODE ACTIVATED 🔥${RESET}`);

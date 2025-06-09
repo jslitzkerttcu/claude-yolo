@@ -1,9 +1,10 @@
 {
   "name": "claude-yolo",
-  "version": "1.7.0",
-  "description": "YOLO wrapper for Claude CLI with danger mode always enabled, auto-updates, and colorful loading messages",
+  "version": "1.8.0",
+  "description": "Claude CLI wrapper with YOLO mode (bypass safety) and SAFE mode support, auto-updates, and colorful loading messages",
   "bin": {
-    "claude-yolo": "./bin/claude-yolo.js"
+    "claude-yolo": "./bin/claude-yolo.js",
+    "cl": "./bin/cl"
   },
   "dependencies": {
     "@anthropic-ai/claude-code": "0.2.35",
@@ -11,24 +12,27 @@
   },
   "type": "module",
   "scripts": {
+    "postinstall": "chmod +x ./bin/cl"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eastlondoner/claude-yolo.git"
+    "url": "git+https://github.com/maxparez/claude-yolo.git"
   },
   "keywords": [
     "claude",
     "cli",
     "anthropic",
     "wrapper",
-    "yolo"
+    "yolo",
+    "safe-mode",
+    "permissions"
   ],
-  "author": "eastlondoner",
+  "author": "eastlondoner (fork by maxparez)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/eastlondoner/claude-yolo/issues"
+    "url": "https://github.com/maxparez/claude-yolo/issues"
   },
-  "homepage": "https://github.com/eastlondoner/claude-yolo#readme",
+  "homepage": "https://github.com/maxparez/claude-yolo#readme",
   "engines": {
     "node": ">=14.16"
   }
