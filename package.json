@@ -4,15 +4,15 @@
   "description": "Claude CLI wrapper with YOLO mode (bypass safety) and SAFE mode support, auto-updates, and colorful loading messages",
   "bin": {
     "claude-yolo": "./bin/claude-yolo.js",
-    "cl": "./bin/cl"
+    "cl": "./bin/cl.ps1"
   },
   "dependencies": {
-    "@anthropic-ai/claude-code": "0.2.35",
-    "punycode": "latest"
+    "punycode": "latest",
+    "@anthropic-ai/claude-code": "1.0.51"
   },
   "type": "module",
   "scripts": {
-    "postinstall": "chmod +x ./bin/cl"
+    "postinstall": "node -e \"require('fs').chmodSync('./bin/cl', 0o755);\""
   },
   "repository": {
     "type": "git",
@@ -35,5 +35,10 @@
   "homepage": "https://github.com/maxparez/claude-yolo#readme",
   "engines": {
     "node": ">=14.16"
-  }
+  },
+  "os": [
+    "win32",
+    "darwin",
+    "linux"
+  ]
 }

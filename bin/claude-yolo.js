@@ -3,6 +3,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import os from 'os';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
@@ -251,7 +252,8 @@ async function run() {
     }
     
     // Run original CLI without modifications
-    await import(originalCliPath);
+    const cliUrl = pathToFileURL(originalCliPath).href;
+    await import(cliUrl);
     return; // Exit early
   }
 
@@ -375,7 +377,8 @@ async function run() {
   debug("Added --dangerously-skip-permissions flag to command line arguments");
 
   // Now import the modified CLI
-  await import(yoloCliPath);
+  const yoloCliUrl = pathToFileURL(yoloCliPath).href;
+  await import(yoloCliUrl);
 }
 
 // Run the main function
