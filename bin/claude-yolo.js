@@ -9,6 +9,7 @@ import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import readline from 'readline';
+import { showYoloActivated, showSafeActivated, showModeStatus, YOLO_ART, SAFE_ART } from './ascii-art.js';
 
 // ANSI color codes
 const RED = '\x1b[31m';
@@ -211,20 +212,18 @@ async function run() {
   const args = process.argv.slice(2);
   if (args[0] === 'mode') {
     if (args[1] === 'yolo') {
-      console.log(`${YELLOW}🔥 Switching to YOLO mode...${RESET}`);
-      console.log(`${RED}⚠️  WARNING: All safety checks will be DISABLED!${RESET}`);
+      showYoloActivated();
       setMode('YOLO');
       console.log(`${YELLOW}✓ YOLO mode activated${RESET}`);
       return;
     } else if (args[1] === 'safe') {
-      console.log(`${CYAN}🛡️  Switching to SAFE mode...${RESET}`);
-      console.log(`${GREEN}✓ Safety checks will be enabled${RESET}`);
+      showSafeActivated();
       setMode('SAFE');
       console.log(`${CYAN}✓ SAFE mode activated${RESET}`);
       return;
     } else {
       const currentMode = getMode();
-      console.log(`Current mode: ${currentMode === 'YOLO' ? YELLOW : CYAN}${currentMode}${RESET}`);
+      showModeStatus(currentMode);
       return;
     }
   }
@@ -337,6 +336,7 @@ async function run() {
   debug("Replaced geteuid() checks with false");
 
   // Add warning message
+  console.log(YOLO_ART);
   console.log(`${YELLOW}🔥 YOLO MODE ACTIVATED 🔥${RESET}`);
 
   // Replace the loading messages array with YOLO versions

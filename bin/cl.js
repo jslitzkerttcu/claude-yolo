@@ -5,6 +5,7 @@ import path from 'path';
 import { spawn } from 'child_process';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import { showYoloActivated, showSafeActivated, showModeStatus } from './ascii-art.js';
 
 // Get the directory of the current module
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -43,9 +44,7 @@ if (args.length > 0) {
   
   switch (command) {
     case '/YON':
-      console.log(`${YELLOW}${BOLD}🔥 ACTIVATING YOLO MODE 🔥${RESET}`);
-      console.log(`${RED}⚠️  WARNING: All safety checks will be DISABLED!${RESET}`);
-      console.log(`${RED}⚠️  Claude can access ANY file without asking!${RESET}`);
+      showYoloActivated();
       setMode('YOLO');
       console.log(`${YELLOW}✓ YOLO mode is now ON${RESET}`);
       
@@ -58,9 +57,7 @@ if (args.length > 0) {
       break;
       
     case '/YOFF':
-      console.log(`${CYAN}${BOLD}🛡️  ACTIVATING SAFE MODE 🛡️${RESET}`);
-      console.log(`${GREEN}✓ Safety checks will be enabled${RESET}`);
-      console.log(`${GREEN}✓ Claude will ask for permissions${RESET}`);
+      showSafeActivated();
       setMode('SAFE');
       console.log(`${CYAN}✓ YOLO mode is now OFF (Safe mode ON)${RESET}`);
       
@@ -74,18 +71,7 @@ if (args.length > 0) {
       
     case '/STATUS':
       const mode = getMode();
-      console.log(`${BOLD}Claude CLI Status:${RESET}`);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      if (mode === 'YOLO') {
-        console.log(`Mode: ${YELLOW}${BOLD}YOLO${RESET} 🔥`);
-        console.log(`Safety: ${RED}DISABLED${RESET}`);
-        console.log(`Permissions: ${RED}BYPASSED${RESET}`);
-      } else {
-        console.log(`Mode: ${CYAN}${BOLD}SAFE${RESET} 🛡️`);
-        console.log(`Safety: ${GREEN}ENABLED${RESET}`);
-        console.log(`Permissions: ${GREEN}REQUIRED${RESET}`);
-      }
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      showModeStatus(mode);
       break;
       
     case '/HELP':
