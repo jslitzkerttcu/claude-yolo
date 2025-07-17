@@ -4,23 +4,27 @@ A wrapper for the Claude CLI that can run in YOLO mode (bypassing all safety che
 
 ⚠️ **SECURITY WARNING**: YOLO mode bypasses important safety checks! This completely bypasses the "human in the loop" checks, this could delete your data, leak your secrets and even brick your computer. Use at your own risk.
 
-## What's New in This Fork 🎉
+## Features
 
-This fork adds **SAFE MODE** support and more! You can now:
-- Switch between YOLO and SAFE modes
-- Use the handy `cl` bash wrapper for quick mode switching
-- Mode preference is saved between sessions
-- **NEW**: Auto-start Claude after mode switch
-- **NEW**: YOLO mode works even as root user
+- **Dual Mode Support**: Switch between YOLO and SAFE modes
+- **Mode Persistence**: Your mode choice is saved between sessions
+- **Auto-start**: Claude starts automatically after mode switch
+- **Root User Support**: YOLO mode works even as root user
+- **Visual Mode Indicators**: Clear `[YOLO]` or `[SAFE]` prefixes
+- **Auto-update**: Automatically checks for and installs updates to the Claude package
 
 ## Installation
 
 ```bash
-# Install from this fork
-npm install -g github:maxparez/claude-yolo
+# Clone the repository
+git clone https://github.com/jslitzkerttcu/claude-yolo.git
+cd claude-yolo
 
-# Or install the original
-npm install -g claude-yolo
+# Install dependencies
+npm install
+
+# Link globally to use the command anywhere
+npm link
 ```
 
 The first time you run `claude-yolo`, you will be presented with a consent prompt explaining the security implications. You must explicitly agree to continue.
@@ -60,9 +64,7 @@ claude-yolo mode
 For even easier mode management, use the included `cl` bash wrapper:
 
 ```bash
-# Install globally during npm install
-npm install -g github:maxparez/claude-yolo
-
+# After npm link, the cl wrapper is available globally
 # Or copy manually to your PATH
 cp node_modules/claude-yolo/bin/cl /usr/local/bin/cl
 chmod +x /usr/local/bin/cl
@@ -120,31 +122,17 @@ This wrapper in YOLO mode:
 
 In SAFE mode, it simply runs the original Claude CLI without modifications.
 
-## New in Version 1.8.0 (This Fork)
 
-- **Auto-start on Mode Switch**: `cl /YON` and `cl /YOFF` now automatically start Claude after switching
-- **Root User Bypass**: YOLO mode now works even when running as root/sudo
-- **Improved cl Wrapper**: More intuitive behavior with auto-start feature
-- **Better Error Handling**: Clearer messages when running as root
+## How It Works
 
-## New in Version 1.7.0 (This Fork)
-
-- **SAFE Mode Support**: Run Claude with normal safety checks using `--safe` or `--no-yolo`
-- **Mode Persistence**: Your mode choice is saved in `~/.claude_yolo_state`
-- **Mode Commands**: Use `claude-yolo mode [yolo|safe]` to switch modes
-- **Bash Wrapper**: Included `cl` script for easy mode switching
-- **Visual Mode Indicators**: Clear `[YOLO]` or `[SAFE]` prefixes
-
-## Features
-
-- **Auto-update**: Automatically checks for and installs updates to the Claude package at runtime
-- **Non-destructive approach**: Creates a separate modified copy of the CLI file instead of modifying the original
-- **Safe for global installations**: Your regular `claude` command will work normally even after installing claude-yolo
-- **Debug mode**: Set the `DEBUG=1` environment variable to see detailed logs about the modifications
+- **YOLO Mode**: Creates a modified copy of the Claude CLI that bypasses permission checks
+- **SAFE Mode**: Runs the original Claude CLI without modifications
+- **Non-destructive**: Your regular `claude` command remains untouched
+- **Debug mode**: Set `DEBUG=1` to see detailed logs
 
 ## Why?
 
-Sometimes you just want to YOLO and skip those pesky permission checks. But sometimes you want the safety checks back! This fork gives you the best of both worlds.
+Sometimes you just want to YOLO and skip those pesky permission checks. But sometimes you want the safety checks back! This tool gives you the best of both worlds.
 
 ## Debugging
 
