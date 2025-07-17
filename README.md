@@ -6,6 +6,7 @@ A wrapper for the Claude CLI that can run in YOLO mode (bypassing all safety che
 
 ## Features
 
+- **Cross-Platform**: Works on Windows, Ubuntu, and other Unix-like systems
 - **Dual Mode Support**: Switch between YOLO and SAFE modes
 - **Mode Persistence**: Your mode choice is saved between sessions
 - **Auto-start**: Claude starts automatically after mode switch
@@ -61,7 +62,7 @@ claude-yolo mode
 
 ### Using the cl wrapper script (Recommended!)
 
-For even easier mode management, use the included `cl` bash wrapper:
+For even easier mode management, use the included `cl` wrapper script (works on both Windows and Unix systems):
 
 ```bash
 # After npm link, the cl wrapper is available globally
