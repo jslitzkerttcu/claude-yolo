@@ -50,9 +50,9 @@ function askForConsent() {
       output: process.stdout
     });
 
-    console.log(`\n${BOLD}${YELLOW}🔥 CLAUDE-YOLO CONSENT REQUIRED 🔥${RESET}\n`);
+    console.log(`\n${BOLD}${YELLOW}🔥 CLAUDE-YOLO-EXTENDED CONSENT REQUIRED 🔥${RESET}\n`);
     console.log(`${CYAN}----------------------------------------${RESET}`);
-    console.log(`${BOLD}What is claude-yolo?${RESET}`);
+    console.log(`${BOLD}What is claude-yolo-extended?${RESET}`);
     console.log(`This package creates a wrapper around the official Claude CLI tool that:`);
     console.log(`  1. ${RED}BYPASSES safety checks${RESET} by automatically adding the --dangerously-skip-permissions flag`);
     console.log(`  2. Automatically updates to the latest Claude CLI version`);
@@ -64,14 +64,14 @@ function askForConsent() {
     console.log(`and bypasses important safety checks. This includes ignoring file access`);
     console.log(`permissions that protect your system and privacy.\n`);
 
-    console.log(`${BOLD}By using claude-yolo in YOLO mode:${RESET}`);
+    console.log(`${BOLD}By using claude-yolo-extended in YOLO mode:${RESET}`);
     console.log(`  • You acknowledge these safety checks are being bypassed`);
     console.log(`  • You understand this may allow Claude CLI to access sensitive files`);
     console.log(`  • You accept full responsibility for any security implications\n`);
 
     console.log(`${CYAN}----------------------------------------${RESET}\n`);
 
-    rl.question(`${YELLOW}Do you consent to using claude-yolo with these modifications? (yes/no): ${RESET}`, (answer) => {
+    rl.question(`${YELLOW}Do you consent to using claude-yolo-extended with these modifications? (yes/no): ${RESET}`, (answer) => {
       rl.close();
       const lowerAnswer = answer.toLowerCase().trim();
       if (lowerAnswer === 'yes' || lowerAnswer === 'y') {
@@ -203,7 +203,7 @@ if (fs.existsSync(js)) {
   console.error(`Error: Claude CLI not found in ${claudeDir}. Make sure @anthropic-ai/claude-code is installed.`);
   process.exit(1);
 }
-const consentFlagPath = path.join(claudeDir, '.claude-yolo-consent');
+const consentFlagPath = path.join(claudeDir, '.claude-yolo-extended-consent');
 
 // Main function to run the application
 async function run() {

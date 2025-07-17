@@ -89,12 +89,12 @@ case "$1" in
         # Zobrazit režim před spuštěním
         if [ "$MODE" = "YOLO" ]; then
             echo -e "${YELLOW}[YOLO]${RESET} Running Claude in YOLO mode..."
-            # Check if claude-yolo is installed
-            if command -v claude-yolo &> /dev/null; then
-                claude-yolo "$@"
+            # Check if claude-yolo-extended is installed
+            if command -v claude-yolo-extended &> /dev/null; then
+                claude-yolo-extended "$@"
             else
-                echo -e "${RED}Error: claude-yolo is not installed${RESET}"
-                echo -e "Install it with: ${CYAN}npm install -g claude-yolo${RESET}"
+                echo -e "${RED}Error: claude-yolo-extended is not installed${RESET}"
+                echo -e "Install it with: ${CYAN}npm install -g claude-yolo-extended${RESET}"
                 exit 1
             fi
         else
@@ -103,12 +103,12 @@ case "$1" in
             if command -v claude &> /dev/null; then
                 claude "$@"
             else
-                # If regular claude is not installed, use claude-yolo with --safe flag
-                if command -v claude-yolo &> /dev/null; then
-                    claude-yolo --safe "$@"
+                # If regular claude is not installed, use claude-yolo-extended with --safe flag
+                if command -v claude-yolo-extended &> /dev/null; then
+                    claude-yolo-extended --safe "$@"
                 else
-                    echo -e "${RED}Error: Neither claude nor claude-yolo is installed${RESET}"
-                    echo -e "Install claude-yolo with: ${CYAN}npm install -g claude-yolo${RESET}"
+                    echo -e "${RED}Error: Neither claude nor claude-yolo-extended is installed${RESET}"
+                    echo -e "Install claude-yolo-extended with: ${CYAN}npm install -g claude-yolo-extended${RESET}"
                     exit 1
                 fi
             fi
