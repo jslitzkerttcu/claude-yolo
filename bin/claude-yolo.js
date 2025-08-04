@@ -9,6 +9,7 @@ import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import readline from 'readline';
+import { showYoloActivated, showSafeActivated, showModeStatus, YOLO_ART, SAFE_ART } from './ascii-art.js';
 
 // ANSI color codes
 const RED = '\x1b[31m';
@@ -50,9 +51,9 @@ function askForConsent() {
       output: process.stdout
     });
 
-    console.log(`\n${BOLD}${YELLOW}🔥 CLAUDE-YOLO CONSENT REQUIRED 🔥${RESET}\n`);
+    console.log(`\n${BOLD}${YELLOW}🔥 CLAUDE-YOLO-EXTENDED CONSENT REQUIRED 🔥${RESET}\n`);
     console.log(`${CYAN}----------------------------------------${RESET}`);
-    console.log(`${BOLD}What is claude-yolo?${RESET}`);
+    console.log(`${BOLD}What is claude-yolo-extended?${RESET}`);
     console.log(`This package creates a wrapper around the official Claude CLI tool that:`);
     console.log(`  1. ${RED}BYPASSES safety checks${RESET} by automatically adding the --dangerously-skip-permissions flag`);
     console.log(`  2. Automatically updates to the latest Claude CLI version`);
@@ -64,14 +65,14 @@ function askForConsent() {
     console.log(`and bypasses important safety checks. This includes ignoring file access`);
     console.log(`permissions that protect your system and privacy.\n`);
 
-    console.log(`${BOLD}By using claude-yolo in YOLO mode:${RESET}`);
+    console.log(`${BOLD}By using claude-yolo-extended in YOLO mode:${RESET}`);
     console.log(`  • You acknowledge these safety checks are being bypassed`);
     console.log(`  • You understand this may allow Claude CLI to access sensitive files`);
     console.log(`  • You accept full responsibility for any security implications\n`);
 
     console.log(`${CYAN}----------------------------------------${RESET}\n`);
 
-    rl.question(`${YELLOW}Do you consent to using claude-yolo with these modifications? (yes/no): ${RESET}`, (answer) => {
+    rl.question(`${YELLOW}Do you consent to using claude-yolo-extended with these modifications? (yes/no): ${RESET}`, (answer) => {
       rl.close();
       const lowerAnswer = answer.toLowerCase().trim();
       if (lowerAnswer === 'yes' || lowerAnswer === 'y') {
@@ -203,7 +204,7 @@ if (fs.existsSync(js)) {
   console.error(`Error: Claude CLI not found in ${claudeDir}. Make sure @anthropic-ai/claude-code is installed.`);
   process.exit(1);
 }
-const consentFlagPath = path.join(claudeDir, '.claude-yolo-consent');
+const consentFlagPath = path.join(claudeDir, '.claude-yolo-extended-consent');
 
 // Main function to run the application
 async function run() {
@@ -211,20 +212,18 @@ async function run() {
   const args = process.argv.slice(2);
   if (args[0] === 'mode') {
     if (args[1] === 'yolo') {
-      console.log(`${YELLOW}🔥 Switching to YOLO mode...${RESET}`);
-      console.log(`${RED}⚠️  WARNING: All safety checks will be DISABLED!${RESET}`);
+      showYoloActivated();
       setMode('YOLO');
       console.log(`${YELLOW}✓ YOLO mode activated${RESET}`);
       return;
     } else if (args[1] === 'safe') {
-      console.log(`${CYAN}🛡️  Switching to SAFE mode...${RESET}`);
-      console.log(`${GREEN}✓ Safety checks will be enabled${RESET}`);
+      showSafeActivated();
       setMode('SAFE');
       console.log(`${CYAN}✓ SAFE mode activated${RESET}`);
       return;
     } else {
       const currentMode = getMode();
-      console.log(`Current mode: ${currentMode === 'YOLO' ? YELLOW : CYAN}${currentMode}${RESET}`);
+      showModeStatus(currentMode);
       return;
     }
   }
@@ -337,6 +336,7 @@ async function run() {
   debug("Replaced geteuid() checks with false");
 
   // Add warning message
+  console.log(YOLO_ART);
   console.log(`${YELLOW}🔥 YOLO MODE ACTIVATED 🔥${RESET}`);
 
   // Replace the loading messages array with YOLO versions

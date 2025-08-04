@@ -1,22 +1,19 @@
 {
-  "name": "claude-yolo",
-  "version": "1.8.0",
+  "name": "claude-yolo-extended",
+  "version": "1.9.0",
   "description": "Claude CLI wrapper with YOLO mode (bypass safety) and SAFE mode support, auto-updates, and colorful loading messages",
   "bin": {
-    "claude-yolo": "./bin/claude-yolo.js",
-    "cl": "./bin/cl.ps1"
+    "claude-yolo-extended": "bin/claude-yolo.js",
+    "cl": "bin/cl.js"
   },
   "dependencies": {
     "punycode": "latest",
     "@anthropic-ai/claude-code": "1.0.53"
   },
   "type": "module",
-  "scripts": {
-    "postinstall": "node -e \"require('fs').chmodSync('./bin/cl', 0o755);\""
-  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/maxparez/claude-yolo.git"
+    "url": "git+https://github.com/jslitzkerttcu/claude-yolo.git"
   },
   "keywords": [
     "claude",
@@ -27,12 +24,12 @@
     "safe-mode",
     "permissions"
   ],
-  "author": "eastlondoner (fork by maxparez)",
+  "author": "jslitzkerttcu",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/maxparez/claude-yolo/issues"
+    "url": "https://github.com/jslitzkerttcu/claude-yolo/issues"
   },
-  "homepage": "https://github.com/maxparez/claude-yolo#readme",
+  "homepage": "https://github.com/jslitzkerttcu/claude-yolo#readme",
   "engines": {
     "node": ">=14.16"
   },

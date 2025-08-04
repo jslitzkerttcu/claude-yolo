@@ -1,29 +1,43 @@
-# Claude YOLO
+# Claude YOLO Extended
 
 A wrapper for the Claude CLI that can run in YOLO mode (bypassing all safety checks) OR Safe mode (standard Claude CLI behavior).
 
 ⚠️ **SECURITY WARNING**: YOLO mode bypasses important safety checks! This completely bypasses the "human in the loop" checks, this could delete your data, leak your secrets and even brick your computer. Use at your own risk.
 
-## What's New in This Fork 🎉
+## Features
 
-This fork adds **SAFE MODE** support and more! You can now:
-- Switch between YOLO and SAFE modes
-- Use the handy `cl` bash wrapper for quick mode switching
-- Mode preference is saved between sessions
-- **NEW**: Auto-start Claude after mode switch
-- **NEW**: YOLO mode works even as root user
+- **Cross-Platform**: Works on Windows, Ubuntu, and other Unix-like systems
+- **Dual Mode Support**: Switch between YOLO and SAFE modes
+- **Mode Persistence**: Your mode choice is saved between sessions
+- **Auto-start**: Claude starts automatically after mode switch
+- **Root User Support**: YOLO mode works even as root user
+- **Visual Mode Indicators**: Clear `[YOLO]` or `[SAFE]` prefixes
+- **Auto-update**: Automatically checks for and installs updates to the Claude package
 
 ## Installation
 
-```bash
-# Install from this fork
-npm install -g github:maxparez/claude-yolo
+### Option 1: Install from npm (Recommended)
 
-# Or install the original
-npm install -g claude-yolo
+```bash
+# Install globally from npm
+npm install -g claude-yolo-extended
 ```
 
-The first time you run `claude-yolo`, you will be presented with a consent prompt explaining the security implications. You must explicitly agree to continue.
+### Option 2: Install from source
+
+```bash
+# Clone the repository
+git clone https://github.com/jslitzkerttcu/claude-yolo.git
+cd claude-yolo
+
+# Install dependencies
+npm install
+
+# Link globally to use the command anywhere
+npm link
+```
+
+The first time you run `claude-yolo-extended`, you will be presented with a consent prompt explaining the security implications. You must explicitly agree to continue.
 
 <img width="750" alt="image" src="https://github.com/user-attachments/assets/f8e07cf0-6c43-4663-b9e2-f61b1afb4e99" />
 
@@ -35,36 +49,34 @@ Your consent choice is remembered for future runs.
 
 ```bash
 # Run in SAFE mode (normal Claude CLI behavior)
-claude-yolo --safe
-claude-yolo --no-yolo
+claude-yolo-extended --safe
+claude-yolo-extended --no-yolo
 
 # Run in YOLO mode (default)
-claude-yolo
+claude-yolo-extended
 ```
 
 ### Using mode commands
 
 ```bash
 # Switch to YOLO mode
-claude-yolo mode yolo
+claude-yolo-extended mode yolo
 
 # Switch to SAFE mode
-claude-yolo mode safe
+claude-yolo-extended mode safe
 
 # Check current mode
-claude-yolo mode
+claude-yolo-extended mode
 ```
 
 ### Using the cl wrapper script (Recommended!)
 
-For even easier mode management, use the included `cl` bash wrapper:
+For even easier mode management, use the included `cl` wrapper script (works on both Windows and Unix systems):
 
 ```bash
-# Install globally during npm install
-npm install -g github:maxparez/claude-yolo
-
+# After npm link, the cl wrapper is available globally
 # Or copy manually to your PATH
-cp node_modules/claude-yolo/bin/cl /usr/local/bin/cl
+cp node_modules/claude-yolo-extended/bin/cl /usr/local/bin/cl
 chmod +x /usr/local/bin/cl
 
 # Now you can use:
@@ -101,7 +113,7 @@ Unlike the standard Claude CLI, this fork allows YOLO mode to run even as root u
 ## Usage
 
 ```bash
-claude-yolo [options]
+claude-yolo-extended [options]
 ```
 
 All arguments and options are passed directly to the Claude CLI.
@@ -120,38 +132,24 @@ This wrapper in YOLO mode:
 
 In SAFE mode, it simply runs the original Claude CLI without modifications.
 
-## New in Version 1.8.0 (This Fork)
 
-- **Auto-start on Mode Switch**: `cl /YON` and `cl /YOFF` now automatically start Claude after switching
-- **Root User Bypass**: YOLO mode now works even when running as root/sudo
-- **Improved cl Wrapper**: More intuitive behavior with auto-start feature
-- **Better Error Handling**: Clearer messages when running as root
+## How It Works
 
-## New in Version 1.7.0 (This Fork)
-
-- **SAFE Mode Support**: Run Claude with normal safety checks using `--safe` or `--no-yolo`
-- **Mode Persistence**: Your mode choice is saved in `~/.claude_yolo_state`
-- **Mode Commands**: Use `claude-yolo mode [yolo|safe]` to switch modes
-- **Bash Wrapper**: Included `cl` script for easy mode switching
-- **Visual Mode Indicators**: Clear `[YOLO]` or `[SAFE]` prefixes
-
-## Features
-
-- **Auto-update**: Automatically checks for and installs updates to the Claude package at runtime
-- **Non-destructive approach**: Creates a separate modified copy of the CLI file instead of modifying the original
-- **Safe for global installations**: Your regular `claude` command will work normally even after installing claude-yolo
-- **Debug mode**: Set the `DEBUG=1` environment variable to see detailed logs about the modifications
+- **YOLO Mode**: Creates a modified copy of the Claude CLI that bypasses permission checks
+- **SAFE Mode**: Runs the original Claude CLI without modifications
+- **Non-destructive**: Your regular `claude` command remains untouched
+- **Debug mode**: Set `DEBUG=1` to see detailed logs
 
 ## Why?
 
-Sometimes you just want to YOLO and skip those pesky permission checks. But sometimes you want the safety checks back! This fork gives you the best of both worlds.
+Sometimes you just want to YOLO and skip those pesky permission checks. But sometimes you want the safety checks back! This tool gives you the best of both worlds.
 
 ## Debugging
 
 If you encounter any issues, you can run with debug output:
 
 ```bash
-DEBUG=1 claude-yolo
+DEBUG=1 claude-yolo-extended
 ```
 
 This will show additional information about:
@@ -165,7 +163,7 @@ This will show additional information about:
 
 Claude YOLO automatically checks for updates to the Claude package each time it runs:
 
-1. When you run `claude-yolo`, it checks for the latest version of `@anthropic-ai/claude-code` on npm
+1. When you run `claude-yolo-extended`, it checks for the latest version of `@anthropic-ai/claude-code` on npm
 2. If your installed version is outdated, it will:
    - Update your package.json with the latest version
    - Run npm install to get the newest version
@@ -187,3 +185,60 @@ This is an unofficial tool and not supported by Anthropic. Use at your own risk.
   - You accept full responsibility for any security implications
   
 Anthropic designed these safety checks for good reason. Only use YOLO mode if you fully understand and accept these risks. Use SAFE mode when you want the standard Claude CLI protections.
+
+## Development & Contributing
+
+### Making Changes
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/jslitzkerttcu/claude-yolo.git
+   cd claude-yolo
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Link locally for testing:
+   ```bash
+   npm link
+   ```
+
+4. Test your changes:
+   ```bash
+   claude-yolo-extended --help
+   ```
+
+### Publishing Updates
+
+1. Make your changes and test thoroughly
+
+2. Update the version number:
+   ```bash
+   # For bug fixes (1.8.0 -> 1.8.1)
+   npm version patch
+   
+   # For new features (1.8.0 -> 1.9.0)
+   npm version minor
+   
+   # For breaking changes (1.8.0 -> 2.0.0)
+   npm version major
+   ```
+
+3. Publish to npm:
+   ```bash
+   npm publish
+   ```
+
+4. Push changes to GitHub:
+   ```bash
+   git push origin main --tags
+   ```
+
+### Version Guidelines
+
+- **Patch** (x.x.1): Bug fixes, typo corrections, small tweaks
+- **Minor** (x.1.0): New features, improvements that don't break existing functionality
+- **Major** (2.0.0): Breaking changes, major rewrites, incompatible API changes
