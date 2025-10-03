@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "punycode": "latest",
-    "@anthropic-ai/claude-code": "1.0.53"
+    "@anthropic-ai/claude-code": "1.0.120"
   },
   "type": "module",
   "repository": {
