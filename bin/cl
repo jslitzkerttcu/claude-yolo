@@ -3,7 +3,7 @@
 # Claude YOLO/SAFE Mode Wrapper Script
 # Usage: cl /YON | /YOFF | /STATUS | /HELP | [claude commands]
 
-# Barvy pro výstup
+# Terminal colors
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
@@ -11,24 +11,24 @@ GREEN='\033[0;32m'
 RESET='\033[0m'
 BOLD='\033[1m'
 
-# Soubor pro uložení stavu
+# State file for mode persistence
 STATE_FILE="$HOME/.claude_yolo_state"
 
-# Funkce pro čtení aktuálního režimu
+# Function to get current mode
 get_mode() {
     if [ -f "$STATE_FILE" ]; then
         cat "$STATE_FILE"
     else
-        echo "SAFE"  # Výchozí je bezpečný režim
+        echo "SAFE"  # Default to safe mode
     fi
 }
 
-# Funkce pro nastavení režimu
+# Function to set mode
 set_mode() {
     echo "$1" > "$STATE_FILE"
 }
 
-# Zpracování argumentů
+# Process arguments
 case "$1" in
     /YON)
         echo -e "${YELLOW}${BOLD}🔥 ACTIVATING YOLO MODE 🔥${RESET}"
@@ -83,10 +83,10 @@ case "$1" in
         ;;
         
     *)
-        # Spustit Claude v aktuálním režimu
+        # Run Claude in current mode
         MODE=$(get_mode)
-        
-        # Zobrazit režim před spuštěním
+
+        # Show mode before running
         if [ "$MODE" = "YOLO" ]; then
             echo -e "${YELLOW}[YOLO]${RESET} Running Claude in YOLO mode..."
             # Check if claude-yolo-extended is installed

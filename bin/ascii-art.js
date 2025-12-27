@@ -42,7 +42,7 @@ export function showSafeActivated() {
 export function showModeStatus(mode) {
   console.log(`${BOLD}Claude CLI Status:${RESET}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  
+
   if (mode === 'YOLO') {
     console.log(YOLO_ART);
     console.log(`Mode: ${YELLOW}${BOLD}YOLO${RESET} 🔥`);
