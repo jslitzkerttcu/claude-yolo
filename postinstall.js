@@ -1,13 +1,7 @@
 #!/usr/bin/env node
 
 import readline from 'readline';
-
-// ANSI color codes
-const RED = '\x1b[31m';
-const YELLOW = '\x1b[33m';
-const CYAN = '\x1b[36m';
-const RESET = '\x1b[0m';
-const BOLD = '\x1b[1m';
+import { RED, YELLOW, CYAN, GREEN, RESET, BOLD } from './lib/constants.js';
 
 // Create readline interface for user input
 const rl = readline.createInterface({

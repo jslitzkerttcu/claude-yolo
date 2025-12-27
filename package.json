@@ -6,6 +6,9 @@
     "claude-yolo-extended": "bin/claude-yolo.js",
     "cl": "bin/cl.js"
   },
+  "scripts": {
+    "preuninstall": "node preuninstall.js"
+  },
   "dependencies": {
     "punycode": "latest",
     "@anthropic-ai/claude-code": "2.0.76"

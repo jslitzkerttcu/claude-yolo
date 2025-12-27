@@ -1,11 +1,4 @@
-// ANSI color codes
-const RED = '\x1b[31m';
-const YELLOW = '\x1b[33m';
-const CYAN = '\x1b[36m';
-const GREEN = '\x1b[32m';
-const RESET = '\x1b[0m';
-const BOLD = '\x1b[1m';
-const ORANGE = '\x1b[38;5;208m';
+import { RED, YELLOW, CYAN, GREEN, ORANGE, RESET, BOLD } from '../lib/constants.js';
 
 export const YOLO_ART = `${YELLOW}
     ██╗   ██╗ ██████╗ ██╗      ██████╗ ██╗

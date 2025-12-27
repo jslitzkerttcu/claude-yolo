@@ -4,28 +4,21 @@
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
-import os from 'os';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import readline from 'readline';
 import { showYoloActivated, showSafeActivated, showModeStatus, YOLO_ART, SAFE_ART } from './ascii-art.js';
-
-// ANSI color codes
-const RED = '\x1b[31m';
-const YELLOW = '\x1b[33m';
-const CYAN = '\x1b[36m';
-const GREEN = '\x1b[32m';
-const RESET = '\x1b[0m';
-const BOLD = '\x1b[1m';
-
-// Path to persistent state file
-const stateFile = path.join(os.homedir(), '.claude_yolo_state');
+import {
+  RED, YELLOW, CYAN, GREEN, RESET, BOLD,
+  STATE_FILE, VALID_MODES, TIMEOUTS, MAX_TRAVERSAL_DEPTH,
+  logError, handleFatalError, ErrorSeverity
+} from '../lib/constants.js';
 
 // Function to get current mode from state file
 function getMode() {
   try {
-    return fs.readFileSync(stateFile, 'utf8').trim();
+    return fs.readFileSync(STATE_FILE, 'utf8').trim();
   } catch {
     return 'YOLO'; // Default mode
   }
@@ -33,7 +26,7 @@ function getMode() {
 
 // Function to set mode in state file
 function setMode(mode) {
-  fs.writeFileSync(stateFile, mode);
+  fs.writeFileSync(STATE_FILE, mode);
 }
 
 // Debug logging function that only logs if DEBUG env var is set
@@ -109,7 +102,6 @@ const require = createRequire(import.meta.url);
 // Find node_modules directory by walking up from current file
 // Cross-platform root detection (works on both Unix '/' and Windows 'C:\')
 const isAtRoot = (dir) => path.parse(dir).root === dir;
-const MAX_TRAVERSAL_DEPTH = 10;
 
 let nodeModulesDir = path.resolve(__dirname, '..');
 let traversalDepth = 0;
@@ -128,7 +120,7 @@ async function checkForUpdates() {
     
     // Get the latest version available on npm
     const latestVersionCmd = "npm view @anthropic-ai/claude-code version";
-    const latestVersion = execSync(latestVersionCmd).toString().trim();
+    const latestVersion = execSync(latestVersionCmd, { timeout: TIMEOUTS.NPM_VIEW }).toString().trim();
     debug(`Latest Claude version on npm: ${latestVersion}`);
     
     // Get our current installed version
@@ -171,23 +163,22 @@ async function checkForUpdates() {
       
       // Run npm install
       console.log("Running npm install to update dependencies...");
-      execSync("npm install", { stdio: 'inherit', cwd: nodeModulesDir });
+      execSync("npm install", { stdio: 'inherit', cwd: nodeModulesDir, timeout: TIMEOUTS.NPM_INSTALL });
       console.log("Update complete!");
     } else if (currentVersion === "latest") {
       // If using "latest", just make sure we have the latest version installed
       debug("Using 'latest' tag in package.json, running npm install to ensure we have the newest version");
-      execSync("npm install", { stdio: 'inherit', cwd: nodeModulesDir });
+      execSync("npm install", { stdio: 'inherit', cwd: nodeModulesDir, timeout: TIMEOUTS.NPM_INSTALL });
     }
   } catch (error) {
-    console.error("Error checking for updates:", error.message);
-    debug(error.stack);
+    logError(`Failed to check for updates: ${error.message}`, ErrorSeverity.WARNING, error);
   }
 }
 
 // Try to find global installation of Claude CLI first
 let globalClaudeDir;
 try {
-  const globalNodeModules = execSync('npm -g root').toString().trim();
+  const globalNodeModules = execSync('npm -g root', { timeout: TIMEOUTS.NPM_ROOT }).toString().trim();
   debug(`Global node_modules: ${globalNodeModules}`);
   const potentialGlobalDir = path.join(globalNodeModules, '@anthropic-ai', 'claude-code');
   
@@ -196,7 +187,7 @@ try {
     debug(`Found global Claude installation at: ${globalClaudeDir}`);
   }
 } catch (error) {
-  debug(`Error finding global Claude installation: ${error.message}`);
+  logError(`Could not find global Claude installation: ${error.message}`, ErrorSeverity.DEBUG, error);
 }
 
 // Path to the local Claude CLI installation
@@ -222,27 +213,67 @@ if (fs.existsSync(js)) {
   yoloCliPath = path.join(claudeDir, 'cli-yolo.mjs');
   debug(`Found Claude CLI at ${originalCliPath} (mjs version)`);
 } else {
-  console.error(`Error: Claude CLI not found in ${claudeDir}. Make sure @anthropic-ai/claude-code is installed.`);
-  process.exit(1);
+  handleFatalError(`Claude CLI not found in ${claudeDir}. Make sure @anthropic-ai/claude-code is installed.`);
 }
 const consentFlagPath = path.join(claudeDir, '.claude-yolo-extended-consent');
+
+/**
+ * Clean up modified YOLO CLI files
+ * Called when switching to SAFE mode or uninstalling
+ */
+function cleanupYoloFiles() {
+  const filesToClean = [
+    path.join(claudeDir, 'cli-yolo.js'),
+    path.join(claudeDir, 'cli-yolo.mjs'),
+    consentFlagPath
+  ];
+
+  let cleaned = 0;
+  for (const file of filesToClean) {
+    try {
+      if (fs.existsSync(file)) {
+        fs.unlinkSync(file);
+        debug(`Cleaned up: ${file}`);
+        cleaned++;
+      }
+    } catch (err) {
+      logError(`Could not remove ${file}: ${err.message}`, ErrorSeverity.WARNING, err);
+    }
+  }
+
+  if (cleaned > 0) {
+    console.log(`${CYAN}Cleaned up ${cleaned} YOLO file(s)${RESET}`);
+  }
+
+  return cleaned;
+}
 
 // Main function to run the application
 async function run() {
   // Handle mode commands first
   const args = process.argv.slice(2);
   if (args[0] === 'mode') {
-    if (args[1] === 'yolo') {
+    const requestedMode = args[1]?.toLowerCase();
+
+    if (requestedMode === 'yolo') {
       showYoloActivated();
       setMode('YOLO');
       console.log(`${YELLOW}✓ YOLO mode activated${RESET}`);
       return;
-    } else if (args[1] === 'safe') {
+    } else if (requestedMode === 'safe') {
       showSafeActivated();
       setMode('SAFE');
+      cleanupYoloFiles(); // Clean up YOLO files when switching to SAFE mode
       console.log(`${CYAN}✓ SAFE mode activated${RESET}`);
       return;
+    } else if (requestedMode && !VALID_MODES.includes(requestedMode)) {
+      // Invalid mode specified
+      logError(`Invalid mode '${args[1]}'`);
+      console.log(`Valid modes: ${VALID_MODES.join(', ')}`);
+      console.log(`Usage: claude-yolo-extended mode [yolo|safe]`);
+      process.exit(1);
     } else {
+      // No mode specified, show current status
       const currentMode = getMode();
       showModeStatus(currentMode);
       return;
@@ -267,8 +298,7 @@ async function run() {
     
     // Ensure original CLI exists
     if (!fs.existsSync(originalCliPath)) {
-      console.error(`Error: ${originalCliPath} not found. Make sure @anthropic-ai/claude-code is installed.`);
-      process.exit(1);
+      handleFatalError(`${originalCliPath} not found. Make sure @anthropic-ai/claude-code is installed.`);
     }
     
     // Run original CLI without modifications
@@ -290,8 +320,7 @@ async function run() {
   await checkForUpdates();
 
   if (!fs.existsSync(originalCliPath)) {
-    console.error(`Error: ${originalCliPath} not found. Make sure @anthropic-ai/claude-code is installed.`);
-    process.exit(1);
+    handleFatalError(`${originalCliPath} not found. Make sure @anthropic-ai/claude-code is installed.`);
   }
 
   // Check if consent is needed
@@ -310,7 +339,7 @@ async function run() {
       fs.writeFileSync(consentFlagPath, 'consent-given');
       debug("Created consent flag file");
     } catch (err) {
-      debug(`Error creating consent flag file: ${err.message}`);
+      logError(`Could not create consent flag file: ${err.message}`, ErrorSeverity.WARNING, err);
       // Continue anyway
     }
   }
@@ -372,7 +401,7 @@ async function run() {
       });
       return JSON.stringify(yoloArray);
     } catch (e) {
-      debug(`Error modifying loading messages array: ${e.message}`);
+      logError(`Could not modify loading messages: ${e.message}`, ErrorSeverity.DEBUG, e);
       return arrayStr;
     }
   };
@@ -397,6 +426,5 @@ async function run() {
 
 // Run the main function
 run().catch(err => {
-  console.error("Error:", err);
-  process.exit(1);
+  handleFatalError(`Unexpected error: ${err.message}`, err);
 });

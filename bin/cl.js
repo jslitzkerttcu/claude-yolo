@@ -3,28 +3,22 @@
 import fs from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
-import os from 'os';
 import { fileURLToPath } from 'url';
 import { showYoloActivated, showSafeActivated, showModeStatus } from './ascii-art.js';
 
 // Get the directory of the current module
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// ANSI color codes
-const RED = '\x1b[31m';
-const YELLOW = '\x1b[33m';
-const CYAN = '\x1b[36m';
-const GREEN = '\x1b[32m';
-const RESET = '\x1b[0m';
-const BOLD = '\x1b[1m';
-
-// State file path
-const stateFile = path.join(os.homedir(), '.claude_yolo_state');
+import {
+  RED, YELLOW, CYAN, GREEN, RESET, BOLD,
+  VALID_COMMANDS, DANGEROUS_CHARS_PATTERN, STATE_FILE,
+  logError, handleFatalError
+} from '../lib/constants.js';
 
 // Function to get current mode
 function getMode() {
   try {
-    return fs.readFileSync(stateFile, 'utf8').trim();
+    return fs.readFileSync(STATE_FILE, 'utf8').trim();
   } catch {
     return 'YOLO'; // Default to YOLO mode (matches claude-yolo-extended behavior)
   }
@@ -32,7 +26,22 @@ function getMode() {
 
 // Function to set mode
 function setMode(mode) {
-  fs.writeFileSync(stateFile, mode);
+  fs.writeFileSync(STATE_FILE, mode);
+}
+
+// Function to validate arguments (prevent shell injection on Windows)
+function validateArgs(args) {
+  const isWindows = process.platform === 'win32';
+  if (!isWindows) return true; // Non-Windows uses shell:false
+
+  for (const arg of args) {
+    if (DANGEROUS_CHARS_PATTERN.test(arg)) {
+      logError(`Invalid characters in argument: ${arg}`);
+      console.error('Arguments cannot contain: ; & | \` $ > <');
+      return false;
+    }
+  }
+  return true;
 }
 
 // Get command line arguments
@@ -106,15 +115,20 @@ if (args.length > 0) {
 }
 
 function runClaude(claudeArgs) {
+  // Validate arguments before running (security check for Windows shell)
+  if (!validateArgs(claudeArgs)) {
+    process.exit(1);
+  }
+
   const mode = getMode();
-  
+
   // Show current mode
   if (mode === 'YOLO') {
     console.log(`${YELLOW}[YOLO]${RESET} Running Claude in YOLO mode...`);
   } else {
     console.log(`${CYAN}[SAFE]${RESET} Running Claude in SAFE mode...`);
   }
-  
+
   // Determine which command to run
   const command = 'claude-yolo-extended';
   const commandArgs = mode === 'SAFE' ? ['--safe', ...claudeArgs] : claudeArgs;
@@ -129,9 +143,7 @@ function runClaude(claudeArgs) {
   });
   
   child.on('error', (err) => {
-    console.error(`${RED}Error: Failed to start ${command}${RESET}`);
-    console.error(err.message);
-    process.exit(1);
+    handleFatalError(`Failed to start ${command}: ${err.message}`, err);
   });
   
   child.on('exit', (code) => {
