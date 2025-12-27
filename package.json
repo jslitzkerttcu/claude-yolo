@@ -1,6 +1,6 @@
 {
   "name": "claude-yolo-extended",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "Claude CLI wrapper with YOLO mode (bypass safety) and SAFE mode support, auto-updates, and colorful loading messages",
   "bin": {
     "claude-yolo-extended": "bin/claude-yolo.js",
