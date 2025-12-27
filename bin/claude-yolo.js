@@ -43,6 +43,20 @@ const debug = (message) => {
   }
 };
 
+// Compare semantic versions (returns -1 if a < b, 0 if equal, 1 if a > b)
+function compareVersions(a, b) {
+  if (!a || !b) return 0;
+  const partsA = a.split('.').map(Number);
+  const partsB = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+    const numA = partsA[i] || 0;
+    const numB = partsB[i] || 0;
+    if (numA > numB) return 1;
+    if (numA < numB) return -1;
+  }
+  return 0;
+}
+
 // Function to ask for user consent
 function askForConsent() {
   return new Promise((resolve) => {
@@ -93,9 +107,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
 // Find node_modules directory by walking up from current file
+// Cross-platform root detection (works on both Unix '/' and Windows 'C:\')
+const isAtRoot = (dir) => path.parse(dir).root === dir;
+const MAX_TRAVERSAL_DEPTH = 10;
+
 let nodeModulesDir = path.resolve(__dirname, '..');
-while (!fs.existsSync(path.join(nodeModulesDir, 'node_modules')) && nodeModulesDir !== '/') {
+let traversalDepth = 0;
+while (!fs.existsSync(path.join(nodeModulesDir, 'node_modules')) && !isAtRoot(nodeModulesDir) && traversalDepth < MAX_TRAVERSAL_DEPTH) {
   nodeModulesDir = path.resolve(nodeModulesDir, '..');
+  traversalDepth++;
 }
 
 // Path to check package info
@@ -141,7 +161,8 @@ async function checkForUpdates() {
     }
     
     // If using a specific version (not "latest"), and it's out of date, update
-    if (currentVersion !== "latest" && currentVersion !== latestVersion) {
+    // Use semantic version comparison to correctly handle cases like 2.0.10 > 2.0.9
+    if (currentVersion !== "latest" && compareVersions(currentVersion, latestVersion) < 0) {
       console.log(`Updating Claude package from ${currentVersion || 'unknown'} to ${latestVersion}...`);
       
       // Update package.json
@@ -258,20 +279,13 @@ async function run() {
 
   // YOLO MODE continues below
   console.log(`${YELLOW}[YOLO] Running Claude in YOLO mode${RESET}`);
-  
-  // Temporarily fake non-root for YOLO mode
+
+  // Note: Root check bypass is handled via regex replacements in the CLI code below
+  // (replacing process.getuid() === 0 with false). No need for runtime UID spoofing.
   if (process.getuid && process.getuid() === 0) {
-    console.log(`${YELLOW}⚠️  Running as root - applying YOLO bypass...${RESET}`);
-    // Store original getuid
-    const originalGetuid = process.getuid;
-    // Override getuid to return non-root
-    process.getuid = () => 1000; // Fake regular user ID
-    // Restore after a delay to allow CLI to start
-    setTimeout(() => {
-      process.getuid = originalGetuid;
-    }, 100);
+    console.log(`${YELLOW}⚠️  Running as root - YOLO bypass will be applied via code modification${RESET}`);
   }
-  
+
   // Check and update Claude package first
   await checkForUpdates();
 

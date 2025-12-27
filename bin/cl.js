@@ -120,9 +120,12 @@ function runClaude(claudeArgs) {
   const commandArgs = mode === 'SAFE' ? ['--safe', ...claudeArgs] : claudeArgs;
   
   // Spawn the process
+  // Note: shell:false is safer (prevents command injection) but requires
+  // the command to be in PATH. On Windows, we need shell:true for .cmd files.
+  const isWindows = process.platform === 'win32';
   const child = spawn(command, commandArgs, {
     stdio: 'inherit',
-    shell: true
+    shell: isWindows  // Only use shell on Windows where it's required for PATH resolution
   });
   
   child.on('error', (err) => {
