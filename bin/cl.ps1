@@ -1,12 +1,6 @@
 # Claude YOLO/SAFE Mode Wrapper Script
 # Usage: cl.ps1 /YON | /YOFF | /STATUS | /HELP | [claude commands]
-
-param(
-    [Parameter(Position=0)]
-    [string]$Command,
-    [Parameter(Position=1)]
-    [string]$Argument
-)
+# All arguments are passed through to Claude (e.g., cl --chrome --debug, cl mcp list)
 
 # Colors for output
 $RED = "`e[31m"
@@ -32,5 +26,5 @@ if (-not (Test-Path $scriptPath)) {
     exit 1
 }
 
-# Run the main script with arguments
-& node $scriptPath $Command $Argument
+# Run the main script with ALL arguments passed through
+& node $scriptPath @args
